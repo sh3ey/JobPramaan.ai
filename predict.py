@@ -1,0 +1,67 @@
+import joblib
+import os
+import re
+import nltk
+from nltk.corpus import stopwords
+from nltk.stem import WordNetLemmatizer
+
+# Ensure NLTK data is downloaded
+nltk.download('stopwords', quiet=True)
+nltk.download('wordnet', quiet=True)
+nltk.download('omw-1.4', quiet=True)
+
+lemmatizer = WordNetLemmatizer()
+stop_words = set(stopwords.words('english'))
+
+def clean_text(text):
+    text = re.sub(r'<.*?>', ' ', text)
+    text = re.sub(r'http\S+|www\S+|https\S+', '', text, flags=re.MULTILINE)
+    text = re.sub(r'[^a-zA-Z\s]', '', text)
+    text = text.lower()
+    cleaned_words = [lemmatizer.lemmatize(word) for word in text.split() if word not in stop_words]
+    return ' '.join(cleaned_words)
+
+# --- BULLETPROOF PATH RESOLUTION ---
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+MODEL_PATH = os.path.join(BASE_DIR, 'models', 'best_model.pkl')
+TFIDF_PATH = os.path.join(BASE_DIR, 'models', 'tfidf_vectorizer.pkl')
+
+# Global variables set up
+model = None
+vectorizer = None
+
+if os.path.exists(MODEL_PATH) and os.path.exists(TFIDF_PATH):
+    model = joblib.load(MODEL_PATH)
+    vectorizer = joblib.load(TFIDF_PATH)
+    print("✅ Models loaded successfully!")
+else:
+    print(f"❌ Error: Models not found.")
+    print(f"I am looking for the models exactly here:")
+    print(f"1. {MODEL_PATH}")
+    print(f"2. {TFIDF_PATH}")
+    print("Please check if the spelling of the folder or files is correct.")
+
+# ---------------------------------
+
+def predict_job_posting(raw_text):
+    # Safety check
+    if model is None or vectorizer is None:
+        return {"is_fake": False, "probability_fake": None, "error": "Model files missing!"}
+        
+    cleaned_input = clean_text(raw_text)
+    vectorized_input = vectorizer.transform([cleaned_input])
+    prediction = model.predict(vectorized_input)[0]
+    
+    probability = None
+    if hasattr(model, "predict_proba"):
+        probability = model.predict_proba(vectorized_input)[0][1] 
+        
+    return {
+        "is_fake": bool(prediction == 1),
+        "probability_fake": round(probability * 100, 2) if probability is not None else None
+    }
+
+if __name__ == "__main__":
+    test_job = "URGENT HIRING! Work from home and earn $10000 per week. Send cash to register."
+    result = predict_job_posting(test_job)
+    print(f"\nPrediction Result: {result}")
