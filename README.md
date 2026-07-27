@@ -5,7 +5,7 @@
 ![Streamlit](https://img.shields.io/badge/Streamlit-Web_Framework-red.svg)
 ![NLTK](https://img.shields.io/badge/NLTK-NLP-green.svg)
 
-An end-to-end Machine Learning and Natural Language Processing (NLP) pipeline designed to verify the authenticity of online job postings. **JobPramaan.ai** features a robust classification model and a production-ready, dark-themed SaaS web interface.
+An end-to-end Machine Learning and Natural Language Processing (NLP) pipeline designed to verify the authenticity of online job postings. **JobPramaan.ai** features a robust classification model paired with a Hybrid Rule Engine and a production-ready, dark-themed SaaS web interface.
 
 ---
 
@@ -15,6 +15,7 @@ With the rapid increase in online employment scams, JobPramaan.ai aims to protec
 ## ✨ Key Features
 * **Advanced NLP Preprocessing:** Custom text cleaning pipeline handling HTML tags, URLs, Stopwords, and Lemmatization.
 * **Feature Engineering:** Unstructured text transformed into numerical arrays using **TF-IDF Vectorization**.
+* **Hybrid Rule & ML Engine:** Combines Machine Learning predictions with real-time heuristic keyword and regex detectors (catching Telegram handles, USDT/Crypto, and Check scams instantly).
 * **Model Comparison:** Comprehensive evaluation across Logistic Regression, Naive Bayes, Linear SVM, and Random Forest.
 * **Premium SaaS UI:** A custom-styled, dark-themed Streamlit web interface mimicking modern cybersecurity and verification tools.
 
@@ -44,8 +45,7 @@ Due to the highly imbalanced nature of the dataset, **Accuracy is a misleading m
 
 ## 📂 Project Structure
 
-```text
-Fake-Job-Detection/
+JobPramaan.ai/
 │
 ├── dataset/
 │   └── fake_job_postings.csv         # Original raw dataset
@@ -58,32 +58,40 @@ Fake-Job-Detection/
 │   └── notebook.ipynb                # EDA, Data Cleaning, Model Training & Evaluation
 │
 ├── app.py                            # Streamlit Web Application (Dark SaaS UI)
-├── predict.py                        # Backend Inference & Preprocessing Script
+├── predict.py                        # Backend Inference, Preprocessing & Heuristic Script
 ├── requirements.txt                  # Python dependencies
 └── README.md                         # Project documentation
-⚙️ Installation & Usage
-1. Clone the repository
 
-Bash
-git clone [https://github.com/sh3ey/Fake-Job-Detection.git](https://github.com/sh3ey/Fake-Job-Detection.git)
-cd Fake-Job-Detection
-2. Install Python Dependencies
+---
 
-Bash
-pip install -r requirements.txt
-3. Run the Web Application
+## ⚙️ Installation & Usage
 
-Bash
-streamlit run app.py
-🔍 Model Interpretability & Limitations
-How the Model Makes Decisions
-The classification engine operates on the mathematical weights assigned by the TF-IDF Vectorizer. Words that are globally rare but frequent in specific documents are penalized or rewarded. The model associates high-risk weights with semantic patterns commonly used by scammers, such as "urgent hiring," "cash deposit," "no experience required," and unusual financial phrasing.
+1. Clone the repository:
+   git clone https://github.com/sh3ey/JobPramaan.ai.git
+   cd JobPramaan.ai
 
-Real-World Limitations
-False Positives on Enthusiastic Postings: The model may occasionally flag legitimate startup job postings as fraudulent if they use aggressive marketing language (e.g., "Urgent," "Hustle," "Unlimited earning").
+2. Install Python Dependencies:
+   pip install -r requirements.txt
 
-Lack of Contextual Understanding: Since TF-IDF relies on word frequencies rather than the sequence of words, it might miss the deeper context that advanced deep learning models (like BERT) would catch.
+3. Run the Web Application:
+   streamlit run app.py
 
-Evolving Scam Patterns: Scammers continuously adapt their language. A static model will experience conceptual drift over time. To maintain accuracy, the model requires periodic retraining with newly identified fraudulent postings.
+---
 
-Developed as a capstone internship project focusing on Applied Machine Learning, NLP, and Software Deployment.
+## 🔍 Model Interpretability & Limitations
+
+### How the Model Makes Decisions
+The classification engine operates on a hybrid approach:
+* **Hybrid Triggers:** Scans for high-risk flags like off-platform handles, crypto payment requests, or fake equipment checks.
+* **TF-IDF & Linear SVM:** Assigns mathematical weights to text patterns. Words globally rare but frequent in scam postings (e.g., "urgent hiring," "cash deposit," "no experience required") boost the fraud probability score.
+
+### Real-World Limitations
+* **False Positives on Aggressive Postings:** Postings with heavy marketing jargon ("Urgent", "Unlimited earning") might occasionally raise flags.
+* **Lack of Deep Sequence Context:** TF-IDF measures word frequency rather than sentence context (which transformers like BERT capture).
+* **Evolving Scam Patterns:** Scammers adjust vocabulary over time, requiring periodic model retraining.
+
+---
+
+<p align="center">
+  <i>Developed as part of an Internship Project, focusing on Applied Machine Learning, NLP Pipeline Engineering, and Interactive Software Deployment.</i>
+</p>
