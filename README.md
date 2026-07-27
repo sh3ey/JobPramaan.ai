@@ -10,7 +10,7 @@ An end-to-end Machine Learning and Natural Language Processing (NLP) pipeline de
 ---
 
 ## 🎯 Project Objective
-With the rapid increase in online employment scams, JobPramaan.ai aims to protect job seekers by developing a machine learning-based system capable of identifying fraudulent job postings. The system analyzes textual data (Job Descriptions, Requirements, Company Profiles) to classify postings as either **Legitimate (Pramaan Verified)** or **Fraudulent**. 
+With the rapid increase in online employment scams, JobPramaan.ai aims to protect job seekers by developing a machine learning-based system capable of identifying fraudulent job postings. The system analyzes textual data (Job Descriptions, Requirements, Company Profiles) to classify postings as either **Legitimate (Pramaan Verified)** or **Fraudulent**.
 
 ## ✨ Key Features
 * **Advanced NLP Preprocessing:** Custom text cleaning pipeline handling HTML tags, URLs, Stopwords, and Lemmatization.
@@ -24,7 +24,7 @@ With the rapid increase in online employment scams, JobPramaan.ai aims to protec
 ## 📊 Dataset & Preprocessing
 * **Dataset:** EMSCAD (Employment Scam Aegean Dataset) containing 17,880 real-world job postings.
 * **Class Distribution:** Highly imbalanced (~95% Legitimate, ~5% Fraudulent).
-* **Data Cleaning:** 
+* **Data Cleaning:**
   * Addressed missing values by imputing empty strings to preserve textual integrity.
   * Merged multiple textual attributes (`title`, `description`, `requirements`, `company_profile`) into a single consolidated feature.
   * Applied RegEx for noise reduction (removing punctuation, web links) and NLTK for tokenization and lemmatization.
@@ -45,6 +45,7 @@ Due to the highly imbalanced nature of the dataset, **Accuracy is a misleading m
 
 ## 📂 Project Structure
 
+```text
 JobPramaan.ai/
 │
 ├── dataset/
@@ -61,20 +62,27 @@ JobPramaan.ai/
 ├── predict.py                        # Backend Inference, Preprocessing & Heuristic Script
 ├── requirements.txt                  # Python dependencies
 └── README.md                         # Project documentation
+```
 
 ---
 
 ## ⚙️ Installation & Usage
 
-1. Clone the repository:
-   git clone https://github.com/sh3ey/JobPramaan.ai.git
-   cd JobPramaan.ai
+1. **Clone the repository**
+```bash
+git clone [https://github.com/sh3ey/JobPramaan.ai.git](https://github.com/sh3ey/JobPramaan.ai.git)
+cd JobPramaan.ai
+```
 
-2. Install Python Dependencies:
-   pip install -r requirements.txt
+2. **Install Python Dependencies**
+```bash
+pip install -r requirements.txt
+```
 
-3. Run the Web Application:
-   streamlit run app.py
+3. **Run the Web Application**
+```bash
+streamlit run app.py
+```
 
 ---
 
