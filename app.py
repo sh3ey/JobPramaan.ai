@@ -6,11 +6,11 @@ from predict import predict_job_posting
 
 # Helper function to convert local image to Base64 (Prevents Streamlit hover/fullscreen buttons)
 def get_base64_image(image_path):
-  try:
-    with open(image_path, "rb") as img_file:
-      return base64.b64encode(img_file.read()).decode("utf-8")
-  except Exception:
-    return ""
+    try:
+        with open(image_path, "rb") as img_file:
+            return base64.b64encode(img_file.read()).decode("utf-8")
+    except Exception:
+        return ""
 
 
 logo_b64 = get_base64_image("logo.png")
@@ -276,51 +276,51 @@ st.markdown(
 col1, col2 = st.columns([1.1, 1], gap="large")
 
 with col1:
-  logo_col, overline_col = st.columns([0.12, 0.88], gap="small")
+    logo_col, overline_col = st.columns([0.12, 0.88], gap="small")
 
-  with logo_col:
-    # Render Base64 HTML image to avoid Streamlit's image wrapper & zoom overlay
-    if logo_b64:
-      st.markdown(
-          f'<img src="data:image/png;base64,{logo_b64}" width="48" style="display:'
-          ' block; margin-top: 4px;">',
-          unsafe_allow_html=True,
-      )
-    else:
-      # Fallback if image isn't loaded properly
-      st.markdown("🛡️")
+    with logo_col:
+        # Render Base64 HTML image to avoid Streamlit's image wrapper & zoom overlay
+        if logo_b64:
+            st.markdown(
+                f'<img src="data:image/png;base64,{logo_b64}" width="48" style="display:'
+                ' block; margin-top: 4px;">',
+                unsafe_allow_html=True,
+            )
+        else:
+            # Fallback if image isn't loaded properly
+            st.markdown("🛡️")
 
-  with overline_col:
+    with overline_col:
+        st.markdown(
+            '<div class="overline-text" style="margin-top:'
+            ' 14px;">JOBPRAMAAN.AI • FREE SCAM CHECKER</div>',
+            unsafe_allow_html=True,
+        )
+
     st.markdown(
-        '<div class="overline-text" style="margin-top:'
-        ' 14px;">JOBPRAMAAN.AI • FREE SCAM CHECKER</div>',
-        unsafe_allow_html=True,
-    )
-
-  st.markdown(
-      '''
+        '''
         <div class="main-heading" style="margin-top: 10px;">
             Check if a job is a<br>
             scam<br>
             <span class="highlight-green">before you reply.</span>
         </div>
     ''',
-      unsafe_allow_html=True,
-  )
+        unsafe_allow_html=True,
+    )
 
-  st.markdown(
-      '''
+    st.markdown(
+        '''
         <div class="subtext">
             Paste any job description or requirements. Get a <strong>0–100 risk score</strong> 
             with every red flag explained — completely <strong>free with no account required.</strong>
         </div>
     ''',
-      unsafe_allow_html=True,
-  )
+        unsafe_allow_html=True,
+    )
 
 with col2:
-  st.markdown(
-      '''
+    st.markdown(
+        '''
         <div class="window-header">
             <div class="tabs">
                 <div class="tab"><span style="color:#22c55e;">●</span> Paste Text Only</div>
@@ -332,22 +332,28 @@ with col2:
             </div>
         </div>
     ''',
-      unsafe_allow_html=True,
-  )
+        unsafe_allow_html=True,
+    )
 
-  job_text = st.text_area(
-      "",
-      placeholder=(
-          "Paste the full job description here (e.g. Responsibilities,"
-          " Requirements, Salary)..."
-      ),
-      height=200,
-      label_visibility="collapsed",
-  )
-  scan_clicked = st.button("Scan Now ➔")
+    job_text = st.text_area(
+        "",
+        placeholder=(
+            "Paste the full job description here (e.g. Responsibilities,"
+            " Requirements, Salary)..."
+        ),
+        height=200,
+        label_visibility="collapsed",
+    )
 
-  st.markdown(
-      '''
+    # Reset state if text field is empty
+    if not job_text.strip():
+        st.session_state["last_scanned_text"] = ""
+        st.session_state["scan_result"] = None
+
+    scan_clicked = st.button("Scan Now ➔")
+
+    st.markdown(
+        '''
         <div class="security-text">
             <span>🔒 Anonymous scan</span>
             <span>•</span>
@@ -356,37 +362,51 @@ with col2:
             <span>Never sold</span>
         </div>
     ''',
-      unsafe_allow_html=True,
-  )
+        unsafe_allow_html=True,
+    )
 
-  if scan_clicked:
-    if not job_text.strip():
-      st.warning("Please paste some text to scan.")
-    else:
-      with st.spinner("Analyzing text syntax and risk factors..."):
-        time.sleep(1.0)
-        result = predict_job_posting(job_text)
+    # Calculate prediction ONLY when Scan Now button is clicked
+    if scan_clicked:
+        if not job_text.strip():
+            st.warning("Please paste some text to scan.")
+            st.session_state["scan_result"] = None
+            st.session_state["last_scanned_text"] = ""
+        else:
+            with st.spinner("Analyzing text syntax and risk factors..."):
+                time.sleep(1.0)
+                st.session_state["scan_result"] = predict_job_posting(job_text)
+                st.session_state["last_scanned_text"] = job_text.strip()
+
+    # Render result ONLY IF current text matches last scanned text AND is not empty
+    current_has_result = (
+        bool(job_text.strip()) 
+        and st.session_state.get("scan_result") is not None
+        and st.session_state.get("last_scanned_text") == job_text.strip()
+    )
+
+    if current_has_result:
+        result = st.session_state["scan_result"]
         is_fake = result["is_fake"]
         prob = result.get("probability_fake")
 
         if prob is None:
-          prob = 98.4 if is_fake else 4.2
+            prob = 98.4 if is_fake else 4.2
 
         if is_fake:
-          reasons = result.get("reasons", [])
-          if reasons:
-            reason_items = "".join(
-                [f"<li>Trigger keyword detected: <b>'{r}'</b></li>" for r in reasons]
-            )
-          else:
-            reason_items = (
-                "<li>High concentration of scam-related keywords"
-                " detected</li><li>Unrealistic requirements or suspicious"
-                " onboarding process</li><li>Urgency pattern or off-platform"
-                " link suspected</li>"
-            )
+            reasons = result.get("reasons", [])
+            if reasons:
+                reason_items = "".join(
+                    [f"<li style='margin-bottom: 6px;'>{r}</li>" for r in reasons]
+                )
+            else:
+                reason_items = (
+                    "<li>High concentration of scam-related keywords"
+                    " detected</li><li>Unrealistic requirements or suspicious"
+                    " onboarding process</li><li>Urgency pattern or off-platform"
+                    " link suspected</li>"
+                )
 
-          danger_html = f"""
+            danger_html = f"""
                     <div class="result-box-danger">
                         <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #331515; padding-bottom: 10px; margin-bottom: 10px;">
                             <div style="color: #e5e7eb; font-weight: 600; font-size: 14px;"><span style="color:#ef4444;">●</span> Analyzed Text - Potential Fraud</div>
@@ -394,10 +414,10 @@ with col2:
                         </div>
                         <ul style="color: #ef4444; font-size: 13.5px; margin: 0; padding-left: 15px;">{reason_items}</ul>
                     </div>"""
-          st.markdown(danger_html, unsafe_allow_html=True)
+            st.markdown(danger_html, unsafe_allow_html=True)
         else:
-          real_score = round((100 - prob) if prob > 50 else prob, 1)
-          safe_html = f"""
+            real_score = round((100 - prob) if prob > 50 else prob, 1)
+            safe_html = f"""
                     <div class="result-box-safe">
                         <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #143320; padding-bottom: 10px; margin-bottom: 10px;">
                             <div style="color: #e5e7eb; font-weight: 600; font-size: 14px;"><span style="color:#22c55e;">●</span> Analyzed Text - Legitimate</div>
@@ -405,7 +425,7 @@ with col2:
                         </div>
                         <ul style="color: #22c55e; font-size: 13.5px; margin: 0; padding-left: 15px;"><li style="margin-bottom: 5px;">No suspicious financial requests found</li><li>Language patterns match standard corporate postings</li></ul>
                     </div>"""
-          st.markdown(safe_html, unsafe_allow_html=True)
+            st.markdown(safe_html, unsafe_allow_html=True)
 
 st.markdown(
     "<br><br><hr style='border-color: #1a2621;'><br>", unsafe_allow_html=True
@@ -417,8 +437,8 @@ st.markdown(
 info1, info2, info3 = st.columns(3, gap="large")
 
 with info1:
-  st.markdown(
-      """
+    st.markdown(
+        """
         <div class="info-card">
             <div class="info-title">📖 How to Use</div>
             <div class="info-text">
@@ -432,12 +452,12 @@ with info1:
             </div>
         </div>
     """,
-      unsafe_allow_html=True,
-  )
+        unsafe_allow_html=True,
+    )
 
 with info2:
-  st.markdown(
-      """
+    st.markdown(
+        """
         <div class="info-card">
             <div class="info-title">💡 Pro Safety Tips</div>
             <div class="info-text">
@@ -450,12 +470,12 @@ with info2:
             </div>
         </div>
     """,
-      unsafe_allow_html=True,
-  )
+        unsafe_allow_html=True,
+    )
 
 with info3:
-  st.markdown(
-      """
+    st.markdown(
+        """
         <div class="info-card">
             <div class="info-title">📊 Did You Know?</div>
             <div class="info-text">
@@ -468,8 +488,8 @@ with info3:
             </div>
         </div>
     """,
-      unsafe_allow_html=True,
-  )
+        unsafe_allow_html=True,
+    )
 
 # ==========================================
 # HOW IT WORKS SECTION
@@ -490,40 +510,40 @@ st.markdown(
 step1, step2, step3 = st.columns(3)
 
 with step1:
-  st.markdown(
-      """
+    st.markdown(
+        """
         <div class="step-circle">1</div>
         <div class="step-title">Paste the Job Posting</div>
         <div class="step-desc">
             Copy the full job posting text – including any contact information or email addresses – and paste it into the box.
         </div>
         """,
-      unsafe_allow_html=True,
-  )
+        unsafe_allow_html=True,
+    )
 
 with step2:
-  st.markdown(
-      """
+    st.markdown(
+        """
         <div class="step-circle">2</div>
         <div class="step-title">Click Check</div>
         <div class="step-desc">
             Our tool scans the text for known scam patterns: suspicious domains, banking requests, unrealistic pay, urgency language, and more.
         </div>
         """,
-      unsafe_allow_html=True,
-  )
+        unsafe_allow_html=True,
+    )
 
 with step3:
-  st.markdown(
-      """
+    st.markdown(
+        """
         <div class="step-circle">3</div>
         <div class="step-title">Read Your Risk Report</div>
         <div class="step-desc">
             Get a risk score, a list of red flags with explanations, and clear advice on what to do next.
         </div>
         """,
-      unsafe_allow_html=True,
-  )
+        unsafe_allow_html=True,
+    )
 
 # ==========================================
 # FREQUENTLY ASKED QUESTIONS (FAQ)
@@ -541,60 +561,60 @@ st.markdown(
 )
 
 with st.expander("How can I tell if a job posting is fake?"):
-  st.write(
-      "Fake job postings often use vague job descriptions, offer"
-      " unrealistically high salaries for entry-level work, and request"
-      " off-platform communication (such as Telegram or WhatsApp). You can paste"
-      " any job description into **JobPramaan.ai** to analyze its text using"
-      " Machine Learning and heuristic risk detection."
-  )
+    st.write(
+        "Fake job postings often use vague job descriptions, offer"
+        " unrealistically high salaries for entry-level work, and request"
+        " off-platform communication (such as Telegram or WhatsApp). You can paste"
+        " any job description into **JobPramaan.ai** to analyze its text using"
+        " Machine Learning and heuristic risk detection."
+    )
 
 with st.expander("What are the most common job scam red flags?"):
-  st.write(
-      "- **Upfront payments:** Demanding registration, training, or equipment"
-      " fees.\n- **Off-platform messaging:** Directing applicants to"
-      " communicate via Telegram, WhatsApp, or personal Gmail accounts.\n-"
-      " **Unrealistic compensation:** Offering high weekly payouts for minimal"
-      " or unspecified work.\n- **Cheque/Wire transfer requests:** Asking you to"
-      " deposit a cheque and wire money back.\n- **Missing company details:**"
-      " Lack of an official domain, website, or verifiable address."
-  )
+    st.write(
+        "- **Upfront payments:** Demanding registration, training, or equipment"
+        " fees.\n- **Off-platform messaging:** Directing applicants to"
+        " communicate via Telegram, WhatsApp, or personal Gmail accounts.\n-"
+        " **Unrealistic compensation:** Offering high weekly payouts for minimal"
+        " or unspecified work.\n- **Cheque/Wire transfer requests:** Asking you to"
+        " deposit a cheque and wire money back.\n- **Missing company details:**"
+        " Lack of an official domain, website, or verifiable address."
+    )
 
 with st.expander("Are LinkedIn job postings safe?"):
-  st.write(
-      "While platforms like LinkedIn and Indeed actively monitor listings, fake"
-      " jobs still slip through. Scammers often create duplicate profiles of"
-      " legitimate companies or post ghost jobs. Always verify the recruiter's"
-      " profile and double-check suspicious listings using JobPramaan.ai"
-      " before sharing sensitive personal details."
-  )
+    st.write(
+        "While platforms like LinkedIn and Indeed actively monitor listings, fake"
+        " jobs still slip through. Scammers often create duplicate profiles of"
+        " legitimate companies or post ghost jobs. Always verify the recruiter's"
+        " profile and double-check suspicious listings using JobPramaan.ai"
+        " before sharing sensitive personal details."
+    )
 
 with st.expander("What should I do if I think I applied to a scam job?"):
-  st.write(
-      "1. **Stop all communication** immediately with the recruiter or"
-      " sender.\n2. **Do not send money** or make any payments under any"
-      " circumstances.\n3. **Secure your accounts:** If you shared passwords"
-      " or financial info, update your passwords and contact your bank.\n4."
-      " **Report the listing:** Report the job post on the portal where you"
-      " found it and file a report with local cybercrime authorities."
-  )
+    st.write(
+        "1. **Stop all communication** immediately with the recruiter or"
+        " sender.\n2. **Do not send money** or make any payments under any"
+        " circumstances.\n3. **Secure your accounts:** If you shared passwords"
+        " or financial info, update your passwords and contact your bank.\n4."
+        " **Report the listing:** Report the job post on the portal where you"
+        " found it and file a report with local cybercrime authorities."
+    )
 
 with st.expander("How do job scammers target people?"):
-  st.write(
-      "Scammers gather public resume data from job boards, social media, and"
-      " data leaks. They reach out via unsolicited SMS, WhatsApp messages, or"
-      " emails offering instant interview approvals without a proper screening"
-      " or formal interview process."
-  )
+    st.write(
+        "Scammers gather public resume data from job boards, social media, and"
+        " data leaks. They reach out via unsolicited SMS, WhatsApp messages, or"
+        " emails offering instant interview approvals without a proper screening"
+        " or formal interview process."
+    )
 
 with st.expander("Is it safe to give personal information in a job application?"):
-  st.write(
-      "Standard job applications only require basic contact information and"
-      " career history. **Never share** sensitive details such as government ID"
-      " numbers, bank account numbers, or credit card details during the initial"
-      " application stage. Legitimate employers collect banking info only after"
-      " a formal, verified job offer is signed."
-  )
+    st.write(
+        "Standard job applications only require basic contact information and"
+        " career history. **Never share** sensitive details such as government ID"
+        " numbers, bank account numbers, or credit card details during the initial"
+        " application stage. Legitimate employers collect banking info only after"
+        " a formal, verified job offer is signed."
+    )
 
 # ==========================================
 # FOOTER
