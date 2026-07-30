@@ -48,8 +48,12 @@ def predict_job_posting(raw_text):
     
     matched_triggers = [word for word in scam_triggers if word in text_lower]
     
-    if re.search(r'(?<!\w)@\w+', raw_text) and not re.search(r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b', raw_text):
-        matched_triggers.append("username/handle (@)")
+    offplatform_handle_pattern = r'(?:dm|contact|telegram|whatsapp|reach|message)\s*(?:me|us|at)?\s*@\w+'
+    social_scam_handles = r'@(?:telegram|t\.me|wa\.me|whatsapp|crypto_admin|hr_telegram)'
+
+    if re.search(offplatform_handle_pattern, text_lower) or re.search(social_scam_handles, text_lower):
+        matched_triggers.append("off-platform social handle (@)")
+    
     
     if len(matched_triggers) >= 1:
         return {
